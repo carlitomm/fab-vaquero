@@ -26,10 +26,11 @@ class face_recognition_module:
             cv2.rectangle(self.small_frame, (left, top), (right, bottom), (0, 0, 255), 2)
             self.face_central_pixel_x = (left + ((right - left)/2))
     
+    def face_coordinates(self):
+        return[self.face_central_pixel_x, self.face_central_pixel_y]
+
     def reshape_image(self, frame):
-        # Resize frame of video to 3/4 size for faster face recognition processing
-        #self.small_frame = cv2.resize(frame, (0, 0), fx=0.75, fy=0.75) 
-        self.small_frame = frame
+        self.small_frame = cv2.resize(frame, (0, 0), fx=0.75, fy=0.75) 
         image_hight, image_width, color_map = self.small_frame.shape
         self.image_center_x = image_width / 2
         self.image_center_y = image_hight / 2   
@@ -60,8 +61,6 @@ class face_recognition_module:
 
         self.detect_face_central_pixel()
         self.errorX = self.image_center_x - self.face_central_pixel_x
-            
-        self.show_video()
             
         if cv2.waitKey(1) & 0xFF == ord('q'):
             self.video_capture.release()
