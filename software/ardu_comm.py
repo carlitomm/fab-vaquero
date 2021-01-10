@@ -1,17 +1,9 @@
 #!/usr/bin/env python
-
 import rospy
 import time
-import actionlib
 import serial
-
-from uvbot_core.msg import *
-from uvbot_core.srv import *
-from std_srvs.srv import SetBool, SetBoolRequest, SetBoolResponse
 from sensor_msgs.msg import Range
-from std_msgs.msg import String
-from std_msgs.msg import Int16
-from std_srvs.srv import SetBool
+from people_msgs.msg import Person
 
 class ardu_comm:
 
@@ -25,18 +17,33 @@ class ardu_comm:
         except:     
             rospy.logwarn("some error in arduino connection")
         
+        """
+        things to receive from image node
+        """
+        self.person_coordinates_x = 0
+        self.person_coordinates_y = 0
+
+        self.image_width = 400
+        self.image_center_x = self.image_width / 2
+        self.errorX = self.image_center_x - self.person_coordinates_x
+        self.arduino.write(str(self.errorX))
+
+        """
+        Seonsors publisher
+        """
         self.tof_pub1 = rospy.Publisher('tof1',Range, queue_size=0)
         self.tof_pub2 = rospy.Publisher('tof1',Range, queue_size=0)
         self.tof_pub3 = rospy.Publisher('tof1',Range, queue_size=0)
         self.tof_pub4 = rospy.Publisher('tof1',Range, queue_size=0)
-        self.pir_pub = rospy.Publisher('pir', Int16, queue_size=0)
 
-        self.service = rospy.Service('luces_control', SetBool, self.control_luces)
-        self.luces_on = False
+        """
+        subscribers
+        """
+        self.person_sub = rospy.Subscriber('person_coordinates', Person, self.person_position_cb)
 
-        self.pir = Int16()
-        self.pir.data = 0
-        
+        """
+        sensor publisher init
+        """
         self.tof1 = Range()
         self.tof2 = Range()
         self.tof3 = Range()
@@ -60,25 +67,17 @@ class ardu_comm:
 
         self.buffer = ""
 
-    def control_luces(self, request):
+    def person_position_cb(self, msg):
         if self.arduino.is_open and self.connectio_success is True:
-            self.luces_on = request.data
-            response = SetBoolResponse()
-            response.success = True
-
-            if self.luces_on is True:
-                response.message = 'ligth are ON'
-                self.arduino.write('n')
-            if self.luces_on is False:
-                response.message = 'ligth are OFF'
-                self.arduino.write('l')
+            msg = Person()
+            self.person_coordinates_x = msg.position.x
+            self.person_coordinates_y = msg.position.y
         else:
             try:
                 self.arduino = serial.Serial('/dev/ttyUSB0',115200, timeout=.1)
                 self.connectio_success = True
             except:     
                 rospy.logwarn("some error in arduino connection")
-        return response
     
     def sensor_publisher(self):
         while not rospy.is_shutdown():
@@ -93,39 +92,36 @@ class ardu_comm:
                             buffer += data[i]
                             i = i+1   
                         i = i + 1
-                        tof1.range = float(buffer)
+                        self.tof1.range = float(buffer)
 
                         buffer = ""
                         while data[i] != 'f':
                             buffer += data[i]   
                             i = i+1
                         i = i + 1
-                        tof2.range = float(buffer)
+                        self.tof2.range = float(buffer)
 
                         buffer = ""
                         while data[i] != 'f':
                             buffer += data[i]   
                             i = i+1
                         i = i + 1
-                        tof3.range = float(buffer)
+                        self.tof3.range = float(buffer)
 
                         buffer = ""
                         while data[i] != 'f':
                             buffer += data[i]   
                             i = i+1
                         i = i + 1
-                        tof4.range = float(buffer)/100
+                        self.tof4.range = float(buffer)/100
                     
-                    self.pir.data = 0
                     if data[i] == 'p':          #p sensor pir
                         buffer = data[i+1]   
-                        self.pir.data = int(buffer)
     
                     self.tof_pub1.publish(self.tof1)
                     self.tof_pub2.publish(self.tof2)
                     self.tof_pub3.publish(self.tof3)
                     self.tof_pub4.publish(self.tof4)
-                self.pir_pub.publish(self.pir)
             else:
                 try:
                     self.arduino = serial.Serial('/dev/ttyUSB0',115200, timeout=.1)

@@ -15,7 +15,7 @@ class core():
         """
         Ros Variables
         """
-        self.person_publisher = rospy.Publisher("person_coordinates", Person)
+        self.person_publisher = rospy.Publisher("person_coordinates", Person, queue_size=0)
         self.image_sub = rospy.Subscriber("usb_cam/image_raw", Image, self.image_subscriber_cb) 
     
     def image_subscriber_cb(self, msg):
@@ -29,11 +29,11 @@ class core():
         if self.firstFrameRecieved is True:
             self.fc.detect_face(self.frame)
             self.fc.show_video()
+            self.publish_cordinates()
     
-    def cordinates_publisher(self):
-        #considering verstical
+    def publish_cordinates(self):
         person = Person()
-        person.position.y, person.position.z = self.fc.face_coordinates()
+        person.position.x, person.position.y = self.fc.face_coordinates()
         self.person_publisher.publish(person) 
         
 if __name__ == "__main__":

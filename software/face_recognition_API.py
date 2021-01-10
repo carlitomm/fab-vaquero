@@ -25,6 +25,7 @@ class face_recognition_module:
         for (top, right, bottom, left) in (self.face_locations):
             cv2.rectangle(self.small_frame, (left, top), (right, bottom), (0, 0, 255), 2)
             self.face_central_pixel_x = (left + ((right - left)/2))
+            self.face_central_pixel_y = (top + ((bottom - top)/2))
     
     def face_coordinates(self):
         return[self.face_central_pixel_x, self.face_central_pixel_y]
