@@ -1,0 +1,8 @@
+prefix=/media/carlos/Datos/documents/PROYECTOS/fabelo/vaquero/repo-vaquero/software/catkin_ws/install
+
+Name: vaquero_launch
+Description: Description of vaquero_launch
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 

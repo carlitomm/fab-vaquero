@@ -1,0 +1,2 @@
+vaquero_launch
+-DCATKIN_DEVEL_PREFIX=/media/carlos/Datos/documents/PROYECTOS/fabelo/vaquero/repo-vaquero/software/catkin_ws/devel -DCMAKE_INSTALL_PREFIX=/media/carlos/Datos/documents/PROYECTOS/fabelo/vaquero/repo-vaquero/software/catkin_ws/install -G Unix Makefiles

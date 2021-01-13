@@ -24,7 +24,6 @@ void setup()
   myservo.write(pos); 
 } 
 
-
 void loop() 
 { 
   if(Serial.available() > 0)
