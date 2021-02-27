@@ -4,6 +4,7 @@ import time
 import serial
 from sensor_msgs.msg import Range
 from people_msgs.msg import Person
+from opencv_apps.msg import FaceArrayStamped
 
 class ardu_comm:
 
@@ -39,6 +40,7 @@ class ardu_comm:
         subscribers
         """
         self.person_sub = rospy.Subscriber('person_coordinates', Person, self.person_position_cb)
+        self.facees_sub = rospy.Subscriber('/face_detection/faces', FaceArrayStamped, self.face_position_cb)
 
         """
         sensor publisher init
@@ -68,11 +70,27 @@ class ardu_comm:
 
     def person_position_cb(self, msg):
         if self.arduino.is_open and self.connectio_success is True:
-            msg = Person()
             self.person_coordinates_x = msg.position.x
             self.person_coordinates_y = msg.position.y
+            self.errorX = self.image_center_x - self.person_coordinates_x
             self.arduino.write('l')
             self.arduino.write(str(self.errorX))
+        else:
+            try:
+                self.arduino = serial.Serial('/dev/ttyUSB0',115200, timeout=.1)
+                self.connectio_success = True
+            except:     
+                rospy.logwarn("some error in arduino connection")
+    
+    def face_position_cb(self, msg):       
+        if self.arduino.is_open and self.connectio_success is True:
+            if len(msg.faces) > 0:
+                self.person_coordinates_x = msg.faces[0].face.x
+                self.person_coordinates_y = msg.faces[0].face.y
+                self.errorX = self.image_center_x - self.person_coordinates_x
+                self.arduino.write('l')
+                print (self.errorX)
+                self.arduino.write(str(self.errorX))
         else:
             try:
                 self.arduino = serial.Serial('/dev/ttyUSB0',115200, timeout=.1)
@@ -132,8 +150,6 @@ if __name__ == "__main__":
     
     rospy.init_node('ardu_comm')
     Ardu_comm = ardu_comm()
-
-    Ardu_comm.sensor_publisher()
         
     try:
         rospy.spin()

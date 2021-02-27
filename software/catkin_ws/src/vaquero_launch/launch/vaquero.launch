@@ -4,4 +4,6 @@
         <arg name="image" value="/usb_cam/image_raw"/>      
     </include>
     <include file="$(find usb_cam)/launch/usb_cam-test.launch"/> 
+    <node name="ardu_comm" pkg="vaquero_launch" type="ardu_comm.py" output="screen"/>
+    
 </launch>
